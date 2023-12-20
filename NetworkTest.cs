@@ -1,30 +1,29 @@
-using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public static class NetworkTest
 {
     private const string TargetIP = "8.8.8.8";
-    private static bool? isConnected;
+    private static bool? isConnected = false;
+    private static Ping ping;
 
-    public static async Task<bool> CheckConnection(MonoBehaviour caller, byte threshold = 1)
+    public static async Task<bool> CheckConnection(byte safety = 1)
     {
-        isConnected = null;
+        if (isConnected != null)
+        {
+            isConnected = null;
+            ping = new Ping(TargetIP);
 
-        caller.StartCoroutine(CheckConnection(threshold));
+            await Task.Delay(25 * safety);
 
-        while (isConnected == null)
-            await Task.Delay(5 * threshold);
+            isConnected = ping.isDone;
+        }
+        else
+        {
+            while (isConnected == null)
+                await Task.Delay(1);
+        }
 
         return (bool)isConnected;
-    }
-
-    private static IEnumerator CheckConnection(byte threshold)
-    {
-        Ping ping = new Ping(TargetIP);
-
-        yield return new WaitForSecondsRealtime(0.25f * threshold);
-
-        isConnected = ping.isDone;
     }
 }
